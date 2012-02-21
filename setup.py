@@ -19,7 +19,8 @@ setup(
     author = "Damien Hardy",
     author_email = "dhardy@figarocms.fr",
     keywords = ["thumbor", "hbase", "hadoop", "images"],
-    license = 'MIT'
+    license = 'MIT',
+    url = 'https://github.com/dhardy92/thumbor_hbase',
     classifiers = ['Development Status :: 4 - Beta',
                    'Intended Audience :: Developers',
                    'License :: OSI Approved :: MIT License',
@@ -30,7 +31,7 @@ setup(
                    'Topic :: Multimedia :: Graphics :: Presentation'
     ],
     package_dir = {"thumbor_hbase": "thumbor_hbase"},
-    install_requires=["thumbor","hbase_thrift"]
+    install_requires=["thumbor","hbase_thrift"],
     long_description = """\
 Thumbor is a smart imaging service. It enables on-demand crop, resizing and flipping of images.
 This module provide support for hbase as large auto replicant key/value backend storage for images.
