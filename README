@@ -20,9 +20,6 @@ aptitude install haddop-hbase-master hadoop-hbase-thirft
 #some of this package may be available via pip also
 aptitude install python-pip python-redis python-pymongo python-opencv python-dev 
 
-# needed to get thumbor pyvows tests pass (maybe most recent version of mongodb can be available on 10gen repository, use "mongodb-10gen" so, cf http://www.mongodb.org/display/DOCS/Ubuntu+and+Debian+packages )
-aptitude install mongodb-server redis-server
-
 aptitude install dpkg-dev gcc libcurl4-openssl-dev libpng12-0 libpng3 libpngwriter0c2 libjasper1 pngtools libtiff4 libtiffxx0c2 libtiff-tools libjpeg62 libjpeg-progs openexr libjasper-dev libjpeg62-dev libpng++-dev libpng12-dev libpnglite-dev libpngwriter0-dev libtiff4-dev
 
 pip install thumbor_hbase 
