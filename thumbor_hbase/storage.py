@@ -84,3 +84,6 @@ class Storage(BaseStorage):
     def remove(self,path):
         r = [Mutation(column=self.data_fam + ':' + self.image_col, isDelete=True)]
         self.storage.mutateRow(self.table, md5(path).hexdigest() + '-' + path, r)
+
+    def resolve_original_photo_path(self,filename):
+        return filename

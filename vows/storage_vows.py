@@ -104,6 +104,15 @@ class HbaseStorageVows(HbaseDBContext):
         def should_be_put_and_removed(self, topic):
             expect(topic).to_equal(True)
 
+    class CanReturnPath(Vows.Context):
+        def topic(self):
+            config = Config(HBASE_STORAGE_TABLE=self.parent.table,HBASE_STORAGE_SERVER_PORT=9090)
+            storage = Storage(Context(config=config, server=get_server('ACME-SEC')))
+
+            return storage.resolve_original_photo_path("toto")
+
+        def should_return_the_same(self, topic):
+            expect(topic).to_equal("toto")
 
     class CryptoVows(Vows.Context):
         class RaisesIfInvalidConfig(Vows.Context):
