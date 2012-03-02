@@ -37,6 +37,7 @@ class Storage(BaseStorage):
     def put(self, path, bytes):
         r = [Mutation(column=self.data_fam + ':' + self.image_col, value=bytes)]
         self.storage.mutateRow(self.table, md5(path).hexdigest() + '-' + path, r)
+        return path
 
     def put_crypto(self, path):
         if not self.context.config.STORES_CRYPTO_KEY_FOR_EACH_IMAGE:

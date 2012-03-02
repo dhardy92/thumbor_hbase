@@ -48,12 +48,12 @@ class HbaseStorageVows(HbaseDBContext):
         def topic(self):
             config = Config(HBASE_STORAGE_TABLE=self.parent.table,HBASE_STORAGE_SERVER_PORT=9090,SECURITY_KEY='ACME-SEC')
             storage = Storage(Context(config=config, server=get_server('ACME-SEC')))
-            storage.put(IMAGE_URL % 1, IMAGE_BYTES)
-            return self.parent.connection.get(self.parent.table,IMAGE_URL % 1,self.parent.family)
+            return (storage.put(IMAGE_URL % 1, IMAGE_BYTES) , self.parent.connection.get(self.parent.table,IMAGE_URL % 1,self.parent.family) )
 
         def should_be_in_catalog(self, topic):
-            expect(topic).not_to_be_null()
-            expect(topic).not_to_be_an_error()
+            expect(topic[0]).to_equal(IMAGE_URL % 1)
+            expect(topic[1]).not_to_be_null()
+            expect(topic[1]).not_to_be_an_error()
 
     class CanGetImage(Vows.Context):
         def topic(self):
