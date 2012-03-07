@@ -14,7 +14,7 @@ from thumbor.context import ServerParameters, Context
 from thumbor.config import Config
 from thumbor.importer import Importer
 
-IMAGE_URL = 's.glbimg.com/some/image_%d.jpg'
+IMAGE_URL = 's.glbimg.com/some/image_%s.jpg'
 IMAGE_PATH = join(abspath(dirname(__file__)), 'image.jpg')
 
 with open(IMAGE_PATH, 'r') as img:

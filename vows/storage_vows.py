@@ -48,10 +48,21 @@ class HbaseStorageVows(HbaseDBContext):
         def topic(self):
             config = Config(HBASE_STORAGE_TABLE=self.parent.table,HBASE_STORAGE_SERVER_PORT=9090,SECURITY_KEY='ACME-SEC')
             storage = Storage(Context(config=config, server=get_server('ACME-SEC')))
-            return (storage.put(IMAGE_URL % 1, IMAGE_BYTES) , self.parent.connection.get(self.parent.table,IMAGE_URL % 1,self.parent.family) )
+            return (storage.put(IMAGE_URL % '1', IMAGE_BYTES) , self.parent.connection.get(self.parent.table,IMAGE_URL % 1,self.parent.family) )
 
         def should_be_in_catalog(self, topic):
-            expect(topic[0]).to_equal(IMAGE_URL % 1)
+            expect(topic[0]).to_equal(IMAGE_URL % '1')
+            expect(topic[1]).not_to_be_null()
+            expect(topic[1]).not_to_be_an_error()
+
+    class CanStoreUnicodeImage(Vows.Context):
+        def topic(self):
+            config = Config(HBASE_STORAGE_TABLE=self.parent.table,HBASE_STORAGE_SERVER_PORT=9090,SECURITY_KEY='ACME-SEC')
+            storage = Storage(Context(config=config, server=get_server('ACME-SEC')))
+            return (storage.put(IMAGE_URL % u'àé', IMAGE_BYTES) , self.parent.connection.get(self.parent.table,IMAGE_URL % u'àé'.encode('utf-8'), self.parent.family) )
+
+        def should_be_in_catalog(self, topic):
+            expect(topic[0]).to_equal(IMAGE_URL % u'àé'.encode('utf-8'))
             expect(topic[1]).not_to_be_null()
             expect(topic[1]).not_to_be_an_error()
 
@@ -60,8 +71,8 @@ class HbaseStorageVows(HbaseDBContext):
             config = Config(HBASE_STORAGE_TABLE=self.parent.table,HBASE_STORAGE_SERVER_PORT=9090)
             storage = Storage(Context(config=config, server=get_server('ACME-SEC')))
 
-            storage.put(IMAGE_URL % 2, IMAGE_BYTES)
-            return storage.get(IMAGE_URL % 2)
+            storage.put(IMAGE_URL % '2', IMAGE_BYTES)
+            return storage.get(IMAGE_URL % '2')
 
         def should_not_be_null(self, topic):
             expect(topic).not_to_be_null()
@@ -75,8 +86,8 @@ class HbaseStorageVows(HbaseDBContext):
             config = Config(HBASE_STORAGE_TABLE=self.parent.table,HBASE_STORAGE_SERVER_PORT=9090)
             storage = Storage(Context(config=config, server=get_server('ACME-SEC')))
 
-            storage.put(IMAGE_URL % 8, IMAGE_BYTES)
-            return storage.exists(IMAGE_URL % 8)
+            storage.put(IMAGE_URL % '8', IMAGE_BYTES)
+            return storage.exists(IMAGE_URL % '8')
 
         def should_exists(self, topic):
             expect(topic).to_equal(True)
@@ -86,7 +97,7 @@ class HbaseStorageVows(HbaseDBContext):
             config = Config(HBASE_STORAGE_TABLE=self.parent.table,HBASE_STORAGE_SERVER_PORT=9090)
             storage = Storage(Context(config=config, server=get_server('ACME-SEC')))
 
-            return storage.exists(IMAGE_URL % 9999)
+            return storage.exists(IMAGE_URL % '9999')
 
         def should_not_exists(self, topic):
             expect(topic).to_equal(False)
@@ -96,10 +107,10 @@ class HbaseStorageVows(HbaseDBContext):
             config = Config(HBASE_STORAGE_TABLE=self.parent.table,HBASE_STORAGE_SERVER_PORT=9090)
             storage = Storage(Context(config=config, server=get_server('ACME-SEC')))
 
-            storage.put(IMAGE_URL % 9, IMAGE_BYTES)
-            created = storage.exists(IMAGE_URL % 9)
-            storage.remove(IMAGE_URL % 9)
-            return storage.exists(IMAGE_URL % 9) != created
+            storage.put(IMAGE_URL % '9', IMAGE_BYTES)
+            created = storage.exists(IMAGE_URL % '9')
+            storage.remove(IMAGE_URL % '9')
+            return storage.exists(IMAGE_URL % '9') != created
 
         def should_be_put_and_removed(self, topic):
             expect(topic).to_equal(True)
@@ -119,8 +130,8 @@ class HbaseStorageVows(HbaseDBContext):
             def topic(self):
                 config = Config(HBASE_STORAGE_TABLE=self.parent.parent.table,HBASE_STORAGE_SERVER_PORT=9090, SECURITY_KEY='', STORES_CRYPTO_KEY_FOR_EACH_IMAGE=True)
                 storage = Storage(Context(config=config, server=get_server('')))
-                storage.put(IMAGE_URL % 3, IMAGE_BYTES)
-                storage.put_crypto(IMAGE_URL % 3)
+                storage.put(IMAGE_URL % '3', IMAGE_BYTES)
+                storage.put_crypto(IMAGE_URL % '3')
 
             def should_be_an_error(self, topic):
                 expect(topic).to_be_an_error_like(RuntimeError)
@@ -130,7 +141,7 @@ class HbaseStorageVows(HbaseDBContext):
             def topic(self):
                 config = Config(HBASE_STORAGE_TABLE=self.parent.parent.table,HBASE_STORAGE_SERVER_PORT=9090, STORES_CRYPTO_KEY_FOR_EACH_IMAGE=True)
                 storage = Storage(Context(config=config, server=get_server('ACME-SEC')))
-                return storage.get_crypto(IMAGE_URL % 9999)
+                return storage.get_crypto(IMAGE_URL % '9999')
 
             def should_be_null(self, topic):
                 expect(topic).to_be_null()
@@ -139,9 +150,9 @@ class HbaseStorageVows(HbaseDBContext):
             def topic(self):
                 config = Config(HBASE_STORAGE_TABLE=self.parent.parent.table,HBASE_STORAGE_SERVER_PORT=9090)
                 storage = Storage(Context(config=config, server=get_server('ACME-SEC')))
-                storage.put(IMAGE_URL % 5, IMAGE_BYTES)
-                storage.put_crypto(IMAGE_URL % 5)
-                return storage.get_crypto(IMAGE_URL % 5)
+                storage.put(IMAGE_URL % '5', IMAGE_BYTES)
+                storage.put_crypto(IMAGE_URL % '5')
+                return storage.get_crypto(IMAGE_URL % '5')
 
             def should_be_null(self, topic):
                 expect(topic).to_be_null()
@@ -151,9 +162,9 @@ class HbaseStorageVows(HbaseDBContext):
                 config = Config(HBASE_STORAGE_TABLE=self.parent.parent.table,HBASE_STORAGE_SERVER_PORT=9090, SECURITY_KEY='ACME-SEC', STORES_CRYPTO_KEY_FOR_EACH_IMAGE=True)
                 storage = Storage(Context(config=config, server=get_server('ACME-SEC')))
 
-                storage.put(IMAGE_URL % 6, IMAGE_BYTES)
-                storage.put_crypto(IMAGE_URL % 6)
-                return storage.get_crypto(IMAGE_URL % 6)
+                storage.put(IMAGE_URL % '6', IMAGE_BYTES)
+                storage.put_crypto(IMAGE_URL % '6')
+                return storage.get_crypto(IMAGE_URL % '6')
 
             def should_not_be_null(self, topic):
                 expect(topic).not_to_be_null()
@@ -167,9 +178,9 @@ class HbaseStorageVows(HbaseDBContext):
             def topic(self):
                 config = Config(HBASE_STORAGE_TABLE=self.parent.parent.table,HBASE_STORAGE_SERVER_PORT=9090)
                 storage = Storage(Context(config=config, server=get_server('ACME-SEC')))
-                storage.put(IMAGE_URL % 7, IMAGE_BYTES)
-                storage.put_detector_data(IMAGE_URL % 7, 'some-data')
-                return storage.get_detector_data(IMAGE_URL % 7)
+                storage.put(IMAGE_URL % '7', IMAGE_BYTES)
+                storage.put_detector_data(IMAGE_URL % '7', 'some-data')
+                return storage.get_detector_data(IMAGE_URL % '7')
 
             def should_not_be_null(self, topic):
                 expect(topic).not_to_be_null()
@@ -182,7 +193,7 @@ class HbaseStorageVows(HbaseDBContext):
             def topic(self):
                 config = Config(HBASE_STORAGE_TABLE=self.parent.parent.table,HBASE_STORAGE_SERVER_PORT=9090)
                 storage = Storage(Context(config=config, server=get_server('ACME-SEC')))
-                return storage.get_detector_data(IMAGE_URL % 10000)
+                return storage.get_detector_data(IMAGE_URL % '10000')
 
             def should_not_be_null(self, topic):
                 expect(topic).to_be_null()

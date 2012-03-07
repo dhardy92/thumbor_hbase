@@ -35,6 +35,7 @@ class Storage(BaseStorage):
         self.storage = Hbase.Client(protocol)
 
     def put(self, path, bytes):
+        path = path.encode('utf-8')
         r = [Mutation(column=self.data_fam + ':' + self.image_col, value=bytes)]
         self.storage.mutateRow(self.table, md5(path).hexdigest() + '-' + path, r)
         return path
@@ -46,10 +47,12 @@ class Storage(BaseStorage):
         if not self.context.config.SECURITY_KEY:
             raise RuntimeError("STORES_CRYPTO_KEY_FOR_EACH_IMAGE can't be True if no SECURITY_KEY specified")
 
+        path = path.encode('utf-8')
         r = [Mutation(column=self.data_fam + ':' + self.crypto_col, value=self.context.config.SECURITY_KEY)]
         self.storage.mutateRow(self.table, md5(path).hexdigest() + '-' + path, r)
 
     def put_detector_data(self, path, data):
+        path = path.encode('utf-8')
         r = [Mutation(column=self.data_fam + ':' + self.detector_col, value=dumps(data))]
         self.storage.mutateRow(self.table, md5(path).hexdigest() + '-' + path, r)
 
@@ -57,6 +60,7 @@ class Storage(BaseStorage):
         if not self.context.config.STORES_CRYPTO_KEY_FOR_EACH_IMAGE:
             return None
 
+        path = path.encode('utf-8')
         crypto = self.storage.get(self.table, md5(path).hexdigest() + '-' + path, self.data_fam + ':' + self.crypto_col)
 
         if not crypto:
@@ -64,6 +68,7 @@ class Storage(BaseStorage):
         return crypto[0].value
 
     def get_detector_data(self, path):
+        path = path.encode('utf-8')
         data = self.storage.get(self.table, md5(path).hexdigest() + '-' + path, self.data_fam + ':' + self.detector_col)
 
         try:
@@ -72,6 +77,7 @@ class Storage(BaseStorage):
             return None
 
     def get(self, path):
+        path = path.encode('utf-8')
         r = self.storage.get(self.table, md5(path).hexdigest() + '-' + path, self.data_fam + ':' + self.image_col)
         try:
             return r[0].value
@@ -79,10 +85,13 @@ class Storage(BaseStorage):
           return None
 
     def exists(self, path):
+        path = path.encode('utf-8')
         r = self.storage.get(self.table, md5(path).hexdigest() + '-' + path, self.data_fam + ':' + self.image_col)
+
         return len(r) != 0
 
     def remove(self,path):
+        path = path.encode('utf-8')
         r = [Mutation(column=self.data_fam + ':' + self.image_col, isDelete=True)]
         self.storage.mutateRow(self.table, md5(path).hexdigest() + '-' + path, r)
 
