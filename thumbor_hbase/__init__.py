@@ -14,4 +14,4 @@ Config.define('HBASE_STORAGE_SERVER_PORT', 9090)
 Config.define('HBASE_STORAGE_TABLE', 'thumbor')
 Config.define('HBASE_STORAGE_FAMILY', 'images')
 
-__version__ = "0.3"
+__version__ = "0.4"
