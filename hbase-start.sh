@@ -1,0 +1,3 @@
+java -Xmx1000m -ea -XX:+UseConcMarkSweepGC -XX:+CMSIncrementalMode -Dhbase.log.dir=/usr/lib/hbase/bin/../logs -Dhbase.log.file=hbase.log -Dhbase.home.dir=/usr/lib/hbase/bin/.. -Dhbase.id.str= -Dhbase.root.logger=INFO,console -Djava.library.path=/usr/lib/hadoop-0.20/lib/native/Linux-amd64-64:/usr/lib/hbase/bin/../lib/native/Linux-amd64-64 -classpath `for i in /usr/lib/hbase/*.jar /usr/lib/hbase/lib/*.jar; do printf '%s:' $i; done` org.apache.hadoop.hbase.master.HMaster start >/dev/null 2>&1 &
+
+java -Xmx1000m -ea -XX:+UseConcMarkSweepGC -XX:+CMSIncrementalMode -Dhbase.zookeeper.quorum=localhost:2181 -classpath `for i in /usr/lib/hbase/*.jar /usr/lib/hbase/lib/*.jar; do printf '%s:' $i; done` org.apache.hadoop.hbase.thrift.ThriftServer start >/dev/null 2>&1 &
