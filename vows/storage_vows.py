@@ -55,11 +55,22 @@ class HbaseStorageVows(HbaseDBContext):
             expect(topic[1]).not_to_be_null()
             expect(topic[1]).not_to_be_an_error()
 
-    class CanStoreUnicodeImage(Vows.Context):
+    class CanStoreUnicodeImage2(Vows.Context):
         def topic(self):
             config = Config(HBASE_STORAGE_TABLE=self.parent.table,HBASE_STORAGE_SERVER_PORT=9090,SECURITY_KEY='ACME-SEC')
             storage = Storage(Context(config=config, server=get_server('ACME-SEC')))
             return (storage.put(IMAGE_URL % 'àé', IMAGE_BYTES) , self.parent.connection.get(self.parent.table,IMAGE_URL % 'àé', self.parent.family) )
+
+        def should_be_in_catalog(self, topic):
+            expect(topic[0]).to_equal(IMAGE_URL % u'àé'.encode('utf-8'))
+            expect(topic[1]).not_to_be_null()
+            expect(topic[1]).not_to_be_an_error()
+
+    class CanStoreUnicodeImage(Vows.Context):
+        def topic(self):
+            config = Config(HBASE_STORAGE_TABLE=self.parent.table,HBASE_STORAGE_SERVER_PORT=9090,SECURITY_KEY='ACME-SEC')
+            storage = Storage(Context(config=config, server=get_server('ACME-SEC')))
+            return (storage.put(IMAGE_URL % u'àé'.encode('utf-8'), IMAGE_BYTES) , self.parent.connection.get(self.parent.table,IMAGE_URL % u'àé'.encode('utf-8'), self.parent.family) )
 
         def should_be_in_catalog(self, topic):
             expect(topic[0]).to_equal(IMAGE_URL % u'àé'.encode('utf-8'))
