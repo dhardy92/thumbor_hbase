@@ -14,4 +14,4 @@ Config.define('HBASE_STORAGE_SERVER_PORT', 9090, 'Thrift Hbase interface Port fo
 Config.define('HBASE_STORAGE_TABLE', 'thumbor', 'Thrift Hbase Table for Storage', 'HBase Storage')
 Config.define('HBASE_STORAGE_FAMILY', 'images', 'Thrift Hbase column family for Storage', 'HBase Storage')
 
-__version__ = "0.7"
+__version__ = "0.8"
