@@ -19,8 +19,6 @@ from hbase.ttypes import Mutation
 
 from thumbor.storages import BaseStorage
 
-from urllib import unquote
-
 class Storage(BaseStorage):
     crypto_col = 'crypto'
     detector_col = 'detector'
@@ -37,7 +35,6 @@ class Storage(BaseStorage):
         self.storage = Hbase.Client(protocol)
 
     def put(self, path, bytes):
-        path = unquote(path)
         try:
             key = md5(path).hexdigest() + '-' + path
         except UnicodeEncodeError:
@@ -54,7 +51,6 @@ class Storage(BaseStorage):
         if not self.context.config.SECURITY_KEY:
             raise RuntimeError("STORES_CRYPTO_KEY_FOR_EACH_IMAGE can't be True if no SECURITY_KEY specified")
 
-        path = unquote(path)
         try:
             key = md5(path).hexdigest() + '-' + path
         except UnicodeEncodeError:
@@ -64,7 +60,6 @@ class Storage(BaseStorage):
         self.storage.mutateRow(self.table, key, r)
  
     def put_detector_data(self, path, data):
-        path = unquote(path)
         try:
             key = md5(path).hexdigest() + '-' + path
         except UnicodeEncodeError:
@@ -77,7 +72,6 @@ class Storage(BaseStorage):
         if not self.context.config.STORES_CRYPTO_KEY_FOR_EACH_IMAGE:
             return None
 
-        path = unquote(path)
         try:
             key = md5(path).hexdigest() + '-' + path
         except UnicodeEncodeError:
@@ -90,7 +84,6 @@ class Storage(BaseStorage):
         return crypto[0].value
 
     def get_detector_data(self, path):
-        path = unquote(path)
         try:
             key = md5(path).hexdigest() + '-' + path
         except UnicodeEncodeError:
@@ -104,7 +97,6 @@ class Storage(BaseStorage):
             return None
 
     def get(self, path):
-        path = unquote(path)
         try:
             key = md5(path).hexdigest() + '-' + path
         except UnicodeEncodeError:
@@ -117,7 +109,6 @@ class Storage(BaseStorage):
           return None
 
     def exists(self, path):
-        path = unquote(path)
         try:
             key = md5(path).hexdigest() + '-' + path
         except UnicodeEncodeError:
@@ -128,7 +119,6 @@ class Storage(BaseStorage):
         return len(r) != 0
 
     def remove(self,path):
-        path = unquote(path)
         try:
             key = md5(path).hexdigest() + '-' + path
         except UnicodeEncodeError:
