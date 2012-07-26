@@ -15,7 +15,7 @@ setup(
     name = "thumbor_hbase",
     packages = ["thumbor_hbase"],
     version = __version__,
-    description = "Hbase image storage for Thumbor",
+    description = "HBase image storage for Thumbor",
     author = "Damien Hardy",
     author_email = "dhardy@figarocms.fr",
     keywords = ["thumbor", "hbase", "hadoop", "images"],
