@@ -44,6 +44,14 @@ class HbaseDBContext(Vows.Context):
 
 @Vows.batch
 class HbaseStorageVows(HbaseDBContext):
+    class CanStartWithoutThriftServer(Vows.Context):
+        def topic(self):
+            config = Config(HBASE_STORAGE_SERVER_HOST='dummyserver',HBASE_STORAGE_TABLE=self.parent.table,HBASE_STORAGE_SERVER_PORT=9090,SECURITY_KEY='ACME-SEC')
+            storage = Storage(Context(config=config, server=get_server('ACME-SEC')))
+
+        def does_not_raise_exception(self, topic):
+            expect(topic).Not.to_be_an_error()
+
     class CanStoreImage(Vows.Context):
         def topic(self):
             config = Config(HBASE_STORAGE_TABLE=self.parent.table,HBASE_STORAGE_SERVER_PORT=9090,SECURITY_KEY='ACME-SEC')
