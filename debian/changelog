@@ -1,0 +1,11 @@
+python-thumbor-hbase (0.11-1) unstable; urgency=low
+
+  * Debian packaging support
+
+ -- Damien Hardy <dhardy@viadeoteam.com>  Wed, 15 May 2013 16:15:36 +0200
+
+python-thumbor-hbase (0.10-1) unstable; urgency=low
+
+  * Initial release
+
+ -- Damien Hardy <dhardy@viadeoteam.com>  Wed, 15 May 2013 16:15:36 +0200
