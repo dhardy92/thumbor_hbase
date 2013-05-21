@@ -13,15 +13,34 @@ from thrift.transport.TTransport import TBufferedTransport
 from thrift.protocol import TBinaryProtocol
 from hbase import Hbase, ttypes
 
+from tornado_pyvows.context import TornadoHTTPContext as TornadoHTTPContext
 
 from pyvows import Vows, expect
 
+from thumbor.app import ThumborServiceApp
 from thumbor_hbase.storage import Storage
-from thumbor.context import Context
+from thumbor.importer import Importer
+from thumbor.context import Context, ServerParameters
 from thumbor.config import Config
 from fixtures.storage_fixture import IMAGE_URL, IMAGE_BYTES, get_server
 
+def get_app(table):
+        cfg = Config(HBASE_STORAGE_TABLE=table,
+                     HBASE_STORAGE_SERVER_PORT=9090,
+                     STORAGE='thumbor_hbase.storage')
+        importer = Importer(cfg)
+        importer.import_modules()
+        server = ServerParameters(8888, 'localhost', 'thumbor.conf', None, 'info', None)
+        ctx = Context(server, cfg, importer)
+        application = ThumborServiceApp(ctx)
+
+        return application
+
 class HbaseDBContext(Vows.Context):
+    connection = None
+    table = None
+    family = None
+
     def setup(self):
         transport = TBufferedTransport(TSocket(host='localhost', port=9090))
         transport.open()
@@ -40,7 +59,7 @@ class HbaseDBContext(Vows.Context):
             self.connection.deleteTable(self.table)
         except ttypes.IOError:
             pass
-	self.connection.createTable(self.table, columns)
+        self.connection.createTable(self.table, columns)
 
 @Vows.batch
 class HbaseStorageVows(HbaseDBContext):
@@ -54,7 +73,7 @@ class HbaseStorageVows(HbaseDBContext):
 
     class CanStoreImage(Vows.Context):
         def topic(self):
-            config = Config(HBASE_STORAGE_TABLE=self.parent.table,HBASE_STORAGE_SERVER_PORT=9090,SECURITY_KEY='ACME-SEC')
+            config = Config(HBASE_STORAGE_TABLE=self.parent.table, HBASE_STORAGE_SERVER_PORT=9090, SECURITY_KEY='ACME-SEC')
             storage = Storage(Context(config=config, server=get_server('ACME-SEC')))
             return (storage.put(IMAGE_URL % '1', IMAGE_BYTES) , self.parent.connection.get(self.parent.table,IMAGE_URL % 1,self.parent.family) )
 
@@ -228,3 +247,20 @@ class HbaseStorageVows(HbaseDBContext):
             def should_not_be_null(self, topic):
                 expect(topic).to_be_null()
 
+######################################################################
+# TODO : correct this test (Async operation timed out after 5 seconds)
+######################################################################
+#    class UseWrongTimeStamp(TornadoHTTPContext):
+#
+#        def get_app(self):
+#            return get_app('thumbor-test')
+#
+#        def topic(self):
+#            config = Config(HBASE_STORAGE_TABLE=self.parent.table, HBASE_STORAGE_SERVER_PORT=9090)
+#            storage = Storage(Context(config=config, server=get_server('ACME-SEC')))
+#            storage.put(IMAGE_URL % '8', IMAGE_BYTES)
+#            response = self.get('/unsafe/' + IMAGE_URL % '8' + '?ts=123458')
+#            return response.code
+#
+#        def should_not_be_found_with_wrong_timestamp(self, topic):
+#            expect(topic).to_equal(404)
