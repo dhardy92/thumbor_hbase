@@ -40,7 +40,7 @@ class HbaseDBContext(Vows.Context):
             self.connection.deleteTable(self.table)
         except ttypes.IOError:
             pass
-	self.connection.createTable(self.table, columns)
+        self.connection.createTable(self.table, columns)
 
 
 @Vows.batch
