@@ -1,3 +1,9 @@
+python-thumbor-hbase (0.12-1) unstable; urgency=low
+
+  * Handle ts HTTP parameter
+
+ -- Damien Hardy <dhardy@viadeoteam.com>  Wed, 22 May 2013 14:26:13 +0200
+
 python-thumbor-hbase (0.11-1) unstable; urgency=low
 
   * Debian packaging support
