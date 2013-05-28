@@ -60,35 +60,37 @@ class Storage(BaseStorage):
         if not self.context.config.STORES_CRYPTO_KEY_FOR_EACH_IMAGE:
             return None
 
-        crypto = self._get(path, self.crypto_col)
+        r = self._get(path, self.crypto_col)
 
-        if not crypto:
+        if not r:
             return None
-        return crypto[0].value
+        return r.value
 
     # get detector Json
     def get_detector_data(self, path):
-        data = self._get(path, self.detector_col)
+        r = self._get(path, self.detector_col)
 
-        try:
-            return loads(data[0].value)
-        except IndexError:
+        if r != None:
+            return loads(r.value)
+        else:
             return None
 
     # get image content
     def get(self, path):
         r = self._get(path, self.image_col)
 
-        try:
-            return r[0].value
-        except IndexError: 
-          return None
+        if r != None:
+            return r.value
+        else:
+            return None
 
     # test image exists
     def exists(self, path):
         r = self._get(path, self.image_col)
-
-        return len(r) != 0
+        if r != None:
+            return len(r.value) != 0
+        else:
+            return False
 
     # remove image entries
     def remove(self,key):
@@ -134,11 +136,11 @@ class Storage(BaseStorage):
         #get specific version if ?ts= parameter is used
         try:
             if ts != None:
-                r = self.storage.getRowWithColumnsTs(self.table, key, [self.data_fam + ':' + col], ts)[0]
+                r = self.storage.getRowWithColumnsTs(self.table, key, [self.data_fam + ':' + col], ts)[0].columns.values()[0]
             else:
-                r = self.storage.get(self.table, key, self.data_fam + ':' + col)
+                r = self.storage.get(self.table, key, self.data_fam + ':' + col)[0]
         except IndexError:
-	    r = [] 
+            r = None 
 
         return r
 
