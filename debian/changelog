@@ -1,3 +1,9 @@
+python-thumbor-hbase (0.13-1) unstable; urgency=low
+
+  * Remove timestamp from rowkey
+
+ -- Damien Hardy <dhardy@viadeoteam.com>  Tue, 28 May 2013 11:47:14 +0200
+
 python-thumbor-hbase (0.12-1) unstable; urgency=low
 
   * Handle ts HTTP parameter
