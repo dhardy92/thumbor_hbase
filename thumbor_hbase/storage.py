@@ -136,7 +136,7 @@ class Storage(BaseStorage):
         #get specific version if ?ts= parameter is used
         try:
             if ts != None:
-                r = self.storage.getRowWithColumnsTs(self.table, key, [self.data_fam + ':' + col], ts)[0].columns.values()[0]
+                r = self.storage.getRowWithColumnsTs(self.table, key, [self.data_fam + ':' + col], ts+1)[0].columns.values()[0]
             else:
                 r = self.storage.get(self.table, key, self.data_fam + ':' + col)[0]
         except IndexError:
