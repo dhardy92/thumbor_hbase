@@ -137,6 +137,11 @@ class Storage(BaseStorage):
         try:
             if ts != None:
                 r = self.storage.getRowWithColumnsTs(self.table, key, [self.data_fam + ':' + col], ts+1)[0].columns.values()[0]
+                # due to bug HBASE-7924 timestamp is an upper limit to timerange (lower java Long.MIN_VALUE)
+                # resulting in getting last value of the cell until the timestamp and preventing from geting updates
+                # this is a hack to handle it
+                if r.timestamp < ts:
+                    r = None
             else:
                 r = self.storage.get(self.table, key, self.data_fam + ':' + col)[0]
         except IndexError:
