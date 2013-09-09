@@ -1,3 +1,9 @@
+python-thumbor-hbase (0.16-1) unstable; urgency=low
+
+  * Fix bug on timestamp get
+
+ -- Damien Hardy <dhardy@viaduc436>  Mon, 09 Sep 2013 13:39:13 +0200
+
 python-thumbor-hbase (0.15-1) integ; urgency=low
 
   * bugfix behaviour of getRowWithTimestampTs not returning cell at specified timestamp
