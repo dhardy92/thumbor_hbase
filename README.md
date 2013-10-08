@@ -51,7 +51,25 @@ You have to install [Thumbor](https://github.com/globocom/thumbor) following the
 ... and finally the HBase Storage Module :
 
 	pip install thumbor_hbase
+	
+	
+Usage
+-----
 
+Using it is simple, just change your configuration in thumbor.conf:
+
+    HBASE_STORAGE_SERVER_HOST = "localhost"
+    HBASE_STORAGE_SERVER_PORT = 9000
+    HBASE_STORAGE_TABLE = "storage-table"
+    HBASE_STORAGE_FAMILY = "storage-family"
+
+If you want to use thumbor_hbase for loading original images, change your thumbor.conf to read:
+
+    LOADER = "thumbor_hbase.loader"
+    
+If you want to use thumbor_hbase for storage of original images, change your thumbor.conf to read:
+
+    STORAGE = "thumbor_hbase.storage"
 
 Testing
 -------
