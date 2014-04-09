@@ -1,6 +1,8 @@
 HBase Storage Module for Thumbor
 ===================================
 
+[![Build Status](https://travis-ci.org/dhardy92/thumbor_hbase.svg?branch=master)](https://travis-ci.org/dhardy92/thumbor_hbase)
+
 Introduction
 ------------
 
