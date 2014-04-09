@@ -9,9 +9,11 @@ install:
  - wget http://archive.cloudera.com/cdh4/one-click-install/precise/amd64/cdh4-repository_1.0_all.deb && sudo dpkg -i cdh4-repository_1.0_all.deb
  - curl -s http://archive.cloudera.com/cdh4/ubuntu/precise/amd64/cdh/archive.key | sudo apt-key add -
  - sudo apt-get update
- - sudo apt-get install hbase-master hbase-thrift
+ - sudo apt-get -y install hbase-master hbase-thrift python-opencv libcurl4-openssl-dev python-dev libjpeg8-dev python-pip python-crypto python-gevent libevent-dev python-coverage
  - sudo /etc/init.d/hbase-master start
  - sudo /etc/init.d/hbase-thrift start
+ - sudo pip install pyvows --use-mirrors
+ - sudo pip install thumbor --use-mirrors
 script:
  - sleep 5
  - pyvows -c -l thumbor_hbase
