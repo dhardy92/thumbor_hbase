@@ -1,0 +1,17 @@
+language: 
+ - python
+ - java
+python:
+  - "2.7"
+jdk:
+  - openjdk7
+install:
+ - wget http://archive.cloudera.com/cdh4/one-click-install/precise/amd64/cdh4-repository_1.0_all.deb && sudo dpkg -i cdh4-repository_1.0_all.deb
+ - curl -s http://archive.cloudera.com/cdh4/ubuntu/precise/amd64/cdh/archive.key | sudo apt-key add -
+ - sudo apt-get update
+ - sudo apt-get install hbase-master hbase-thrift
+ - sudo /etc/init.d/hbase-master start
+ - sudo /etc/init.d/hbase-thrift start
+script:
+ - sleep 5
+ - pyvows -c -l thumbor_hbase
