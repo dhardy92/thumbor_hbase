@@ -12,7 +12,7 @@ install:
  - sudo apt-get -y install hbase-master hbase-thrift python-opencv libcurl4-openssl-dev python-dev libjpeg8-dev python-pip python-crypto python-gevent libevent-dev python-coverage
  - sudo /etc/init.d/hbase-master start
  - sudo /etc/init.d/hbase-thrift start
- - sudo pip install pyvows thumbor hbase_thrift
+ - sudo pip install pyvows thumbor hbase_thrift tornado_pyvows
 script:
  - sleep 5
  - pyvows -c -l thumbor_hbase
