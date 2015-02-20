@@ -94,13 +94,13 @@ class Storage(BaseStorage):
 
     # remove image entries
     def remove(self,key):
-        ts = None
+        ts = int(time.time())
         try:
             if (self.context.request_handler.request.arguments['ts']):
                 ts=int(self.context.request_handler.request.arguments['ts'][0])
                 key=re.sub(r'(\?|&)ts=\d+','',key)
         except (AttributeError, KeyError):
-            None
+            ts = int(time.time())
 
         try:
             key = md5(key).hexdigest() + '-' + key
@@ -109,7 +109,7 @@ class Storage(BaseStorage):
 
         if self.storage is None:
             self._connect()
-        self.storage.deleteAllRow(self.table, key)
+        self.storage.deleteAllRowTs(self.table, key, ts)
 
     def resolve_original_photo_path(self,filename):
         return filename
