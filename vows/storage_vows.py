@@ -23,6 +23,7 @@ from thumbor.importer import Importer
 from thumbor.context import Context, ServerParameters
 from thumbor.config import Config
 from fixtures.storage_fixture import IMAGE_URL, IMAGE_BYTES, get_server
+import time
 
 def get_app(table):
         cfg = Config(HBASE_STORAGE_TABLE=table,
@@ -160,6 +161,22 @@ class HbaseStorageVows(HbaseDBContext):
             created = storage.exists(IMAGE_URL % '9')
             storage.remove(IMAGE_URL % '9')
             return storage.exists(IMAGE_URL % '9') != created
+
+        def should_be_put_and_removed(self, topic):
+            expect(topic).to_equal(True)
+
+    class CanRemovethenPutImage(Vows.Context):
+        def topic(self):
+            config = Config(HBASE_STORAGE_TABLE=self.parent.table,HBASE_STORAGE_SERVER_PORT=9090)
+            storage = Storage(Context(config=config, server=get_server('ACME-SEC')))
+
+            storage.put(IMAGE_URL % '10', IMAGE_BYTES)
+            storage.remove(IMAGE_URL % '10')
+            time.sleep(1)  
+            created = storage.exists(IMAGE_URL % '10')
+            time.sleep(1)
+            storage.put(IMAGE_URL % '10', IMAGE_BYTES)
+            return storage.exists(IMAGE_URL % '10') != created
 
         def should_be_put_and_removed(self, topic):
             expect(topic).to_equal(True)
