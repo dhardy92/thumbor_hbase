@@ -10,6 +10,7 @@
 
 
 import happybase
+from thrift.transport.TTransport import TTransportException
 from tornado_pyvows.context import TornadoHTTPContext as TornadoHTTPContext
 
 from pyvows import Vows, expect
@@ -33,27 +34,22 @@ def hbasekey(key):
         key = md5(key.encode('utf-8')).hexdigest() + '-' + key.encode('utf-8')
     return key
 
-
-def get_app(table):
-        cfg = Config(HBASE_STORAGE_TABLE=table,
-                     HBASE_STORAGE_SERVER_PORT=9090,
-                     STORAGE='thumbor_hbase.storage')
-        importer = Importer(cfg)
-        importer.import_modules()
-        server = ServerParameters(8888, 'localhost', 'thumbor.conf', None, 'info', None)
-        ctx = Context(server, cfg, importer)
-        application = ThumborServiceApp(ctx)
-
-        return application
-
 class HbaseDBContext(Vows.Context):
     def setup(self):
-        self.connection = happybase.Connection()
-        self.connection.delete_table(table, disable=True)
-        self.connection.create_table(table, { family: {'max_versions': 1} })
 
-class HbaseStorageVows(Vows.Context):
-    @Vows.batch
+        self.pool = happybase.ConnectionPool(size=10)
+        with self.pool.connection() as connection:
+            try:
+                connection.delete_table(table, disable=True)
+            except happybase.hbase.ttypes.IOError:
+                None
+
+            connection.create_table(table, { family: {'max_versions': 1} })
+
+@Vows.batch
+class HbaseStorageVows(HbaseDBContext):
+
+
     class CanStartWithoutThriftServer(Vows.Context):
         def topic(self):
             config = Config(HBASE_STORAGE_SERVER_HOST='dummyserver',HBASE_STORAGE_TABLE=table,HBASE_STORAGE_SERVER_PORT=9090,SECURITY_KEY='ACME-SEC')
@@ -62,75 +58,78 @@ class HbaseStorageVows(Vows.Context):
         def does_not_raise_exception(self, topic):
             expect(topic).Not.to_be_an_error()
 
-    @Vows.batch
-    class CanStoreImage(HbaseDBContext):
+    class CanStoreImage(Vows.Context):
         def topic(self):
             thumborId = IMAGE_URL % '1'
             
             config = Config(HBASE_STORAGE_TABLE=table, HBASE_STORAGE_SERVER_PORT=9090, SECURITY_KEY='ACME-SEC')
             storage = Storage(Context(config=config, server=get_server('ACME-SEC')))
-            store = storage.put(thumborId, IMAGE_BYTES)
-            result = self.connection.table(table).row(hbasekey(thumborId), [family])
+            store = storage.put(thumborId, IMAGE_BYTES + '_1')
+            with self.parent.pool.connection() as connection:
+                result = connection.table(table).row(hbasekey(thumborId), [family])
+
             return (store , result[family + ':raw'])
 
         def should_be_in_catalog(self, topic):
             expect(topic[0]).to_equal(IMAGE_URL % '1')
             expect(topic[1]).not_to_be_null()
             expect(topic[1]).not_to_be_an_error()
-            expect(topic[1]).to_equal(IMAGE_BYTES)
+            expect(topic[1]).to_equal(IMAGE_BYTES + '_1')
 
-    @Vows.batch
-    class CanStoreUnicodeImage2(HbaseDBContext):
+    class CanStoreUnicodeImage2(Vows.Context):
         def topic(self):
-            thumborId = IMAGE_URL % 'àé'
+            thumborId = IMAGE_URL % 'àé1'
 
             config = Config(HBASE_STORAGE_TABLE=table,HBASE_STORAGE_SERVER_PORT=9090,SECURITY_KEY='ACME-SEC')
             storage = Storage(Context(config=config, server=get_server('ACME-SEC')))
-            store = storage.put(thumborId, IMAGE_BYTES)
-            result = self.connection.table(table).row(hbasekey(thumborId), [family])
+            store = storage.put(thumborId, IMAGE_BYTES + '_àé1')
+            with self.parent.pool.connection() as connection:
+                result = connection.table(table).row(hbasekey(thumborId), [family])
+
             return (store , result[family + ':raw'])
 
         def should_be_in_catalog(self, topic):
-            expect(topic[0]).to_equal(IMAGE_URL % 'àé')
+            expect(topic[0]).to_equal(IMAGE_URL % 'àé1')
             expect(topic[1]).not_to_be_null()
             expect(topic[1]).not_to_be_an_error()
-            expect(topic[1]).to_equal(IMAGE_BYTES)
+            expect(topic[1]).to_equal(IMAGE_BYTES + '_àé1')
 
-    @Vows.batch
-    class CanStoreUnicodeImage(HbaseDBContext):
+    class CanStoreUnicodeImage(Vows.Context):
         def topic(self):
-            thumborId = IMAGE_URL % u'àé'.encode('utf-8')
+            thumborId = IMAGE_URL % u'àé2'.encode('utf-8')
 
             config = Config(HBASE_STORAGE_TABLE=table,HBASE_STORAGE_SERVER_PORT=9090,SECURITY_KEY='ACME-SEC')
             storage = Storage(Context(config=config, server=get_server('ACME-SEC')))
-            store = storage.put(thumborId, IMAGE_BYTES)
-            result = self.connection.table(table).row(hbasekey(thumborId), [family])
+            store = storage.put(thumborId, IMAGE_BYTES + '_àé2')
+            with self.parent.pool.connection() as connection:
+                result = connection.table(table).row(hbasekey(thumborId), [family])
+
             return (store , result[family + ':raw'])
 
         def should_be_in_catalog(self, topic):
-            expect(topic[0]).to_equal(IMAGE_URL % u'àé')
+            expect(topic[0]).to_equal(IMAGE_URL % u'àé2')
             expect(topic[1]).not_to_be_null()
             expect(topic[1]).not_to_be_an_error()
-            expect(topic[1]).to_equal(IMAGE_BYTES)
+            expect(topic[1]).to_equal(IMAGE_BYTES + '_àé2')
 
-    @Vows.batch
-    class CanStoreAndGetUnicodeURLencodedImage(HbaseDBContext):
+    class CanStoreAndGetUnicodeURLencodedImage(Vows.Context):
         def topic(self):
-            thumborId = IMAGE_URL % '%C3%A0%C3%A9'
+            thumborId = IMAGE_URL % '%C3%A0%C3%A93'
 
             config = Config(HBASE_STORAGE_TABLE=table,HBASE_STORAGE_SERVER_PORT=9090,SECURITY_KEY='ACME-SEC')
             storage = Storage(Context(config=config, server=get_server('ACME-SEC')))
-            store = storage.put(thumborId, IMAGE_BYTES)
-            result = self.connection.table(table).row(hbasekey(thumborId), [family])
+            store = storage.put(thumborId, IMAGE_BYTES + '_àé3')
+            with self.parent.pool.connection() as connection:
+                result = connection.table(table).row(hbasekey(thumborId), [family])
+
             return (store , result[family + ':raw'])
 
         def should_be_in_catalog(self, topic):
-            expect(topic[0]).to_equal(IMAGE_URL % '%C3%A0%C3%A9'.encode('utf-8'))
+            expect(topic[0]).to_equal(IMAGE_URL % '%C3%A0%C3%A93'.encode('utf-8'))
             expect(topic[1]).not_to_be_null()
             expect(topic[1]).not_to_be_an_error()
-            expect(topic[1]).to_equal(IMAGE_BYTES)
+            expect(topic[1]).to_equal(IMAGE_BYTES + '_àé3')
 
-    @Vows.batch
     class CanGetImage(Vows.Context):
         def topic(self):
             config = Config(HBASE_STORAGE_TABLE=table,HBASE_STORAGE_SERVER_PORT=9090)
@@ -146,7 +145,6 @@ class HbaseStorageVows(Vows.Context):
         def should_have_proper_bytes(self, topic):
             expect(topic).to_equal(IMAGE_BYTES)
 
-    @Vows.batch
     class CanGetImageExistance(Vows.Context):
         def topic(self):
             config = Config(HBASE_STORAGE_TABLE=table,HBASE_STORAGE_SERVER_PORT=9090)
@@ -158,7 +156,6 @@ class HbaseStorageVows(Vows.Context):
         def should_exists(self, topic):
             expect(topic).to_equal(True)
 
-    @Vows.batch
     class CanGetImageInexistance(Vows.Context):
         def topic(self):
             config = Config(HBASE_STORAGE_TABLE=table,HBASE_STORAGE_SERVER_PORT=9090)
@@ -169,7 +166,6 @@ class HbaseStorageVows(Vows.Context):
         def should_not_exists(self, topic):
             expect(topic).to_equal(False)
 
-    @Vows.batch
     class CanRemoveImage(Vows.Context):
         def topic(self):
             config = Config(HBASE_STORAGE_TABLE=table,HBASE_STORAGE_SERVER_PORT=9090)
@@ -183,7 +179,6 @@ class HbaseStorageVows(Vows.Context):
         def should_be_put_and_removed(self, topic):
             expect(topic).to_equal(True)
 
-    @Vows.batch
     class CanRemovethenPutImage(Vows.Context):
         def topic(self):
             config = Config(HBASE_STORAGE_TABLE=table,HBASE_STORAGE_SERVER_PORT=9090)
@@ -200,7 +195,6 @@ class HbaseStorageVows(Vows.Context):
         def should_be_put_and_removed(self, topic):
             expect(topic).to_equal(True)
 
-    @Vows.batch
     class CanReturnPath(Vows.Context):
         def topic(self):
             config = Config(HBASE_STORAGE_TABLE=table,HBASE_STORAGE_SERVER_PORT=9090)
@@ -211,7 +205,6 @@ class HbaseStorageVows(Vows.Context):
         def should_return_the_same(self, topic):
             expect(topic).to_equal("toto")
 
-    @Vows.batch
     class CryptoVows(Vows.Context):
         class RaisesIfInvalidConfig(Vows.Context):
             def topic(self):
@@ -260,7 +253,6 @@ class HbaseStorageVows(Vows.Context):
             def should_have_proper_key(self, topic):
                 expect(topic).to_equal('ACME-SEC')
 
-    @Vows.batch
     class DetectorVows(Vows.Context):
         class CanStoreDetectorData(Vows.Context):
             def topic(self):
@@ -286,20 +278,3 @@ class HbaseStorageVows(Vows.Context):
             def should_not_be_null(self, topic):
                 expect(topic).to_be_null()
 
-######################################################################
-# TODO : correct this test (Async operation timed out after 5 seconds)
-######################################################################
-#    class UseWrongTimeStamp(TornadoHTTPContext):
-#
-#        def get_app(self):
-#            return get_app('thumbor-test')
-#
-#        def topic(self):
-#            config = Config(HBASE_STORAGE_TABLE=table, HBASE_STORAGE_SERVER_PORT=9090)
-#            storage = Storage(Context(config=config, server=get_server('ACME-SEC')))
-#            storage.put(IMAGE_URL % '8', IMAGE_BYTES)
-#            response = self.get('/unsafe/' + IMAGE_URL % '8' + '?ts=123458')
-#            return response.code
-#
-#        def should_not_be_found_with_wrong_timestamp(self, topic):
-#            expect(topic).to_equal(404)

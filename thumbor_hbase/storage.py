@@ -126,15 +126,15 @@ class Storage(BaseStorage):
 
         with self.pool.connection() as connection:
             table = connection.table(self.table)
-            r = table.row(key,[self.data_fam + ':' + col], timestamp=ts)
+            r = table.row(key,[self.data_fam + ':' + col], timestamp=ts, include_timestamp=True)
 
         #get specific version if ?ts= parameter is used
-        if ts is not None and r.timestamp < ts:
+        if ts is not None and len(r) > 0 and r['%s:%s' % (self.context.config.HBASE_STORAGE_FAMILY, col)][1] < ts:
             return None
 
         try:
             if r is not None:
-              return r['%s:%s' % (self.context.config.HBASE_STORAGE_FAMILY, col)]
+              return r['%s:%s' % (self.context.config.HBASE_STORAGE_FAMILY, col)][0]
         except KeyError:
             None
 
