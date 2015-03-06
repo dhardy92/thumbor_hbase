@@ -10,7 +10,7 @@ Vcs-Git: git://github.com/dhardy92/thumbor_hbase.git
 
 Package: python-thumbor-hbase
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}, python-happybase, python-thrift
+Depends: ${shlibs:Depends}, ${misc:Depends}, python (>= 2.7), python (<< 2.8), thumbor, python-happybase, python-thrift
 Provides: ${python:Provides}
 Description: Provide support for Hadoop HBase as storage for images in Thumbor.
  This Python module provide support for Hadoop HBase as a large 
