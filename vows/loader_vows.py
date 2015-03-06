@@ -52,6 +52,5 @@ class HbaseLoaderVows(HbaseDBContext):
             expect(topic.args[0]).not_to_be_an_error()
 
         def should_have_proper_bytes(self, topic):
-            print topic.args
             expect(topic.args[0]).to_equal(IMAGE_BYTES)
 
