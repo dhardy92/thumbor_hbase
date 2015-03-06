@@ -16,3 +16,6 @@ test:
   override:
     - docker run -d -p 9090:9090 "dhardy92/hbase"; sleep 15
     - pyvows -c -l thumbor_hbase
+    - debuild -i -us -uc -b && dpkg -c ../python-thumbor-hbase_*_*.deb
+  post:
+    - mv ../python-thumbor-hbase_*.{deb,cache} $CIRCLE_ARTIFACTS
