@@ -7,7 +7,7 @@ machine:
 dependencies:
   pre:
     - docker pull dajobe/hbase
-    - pip install pyvows tornado_pyvows happybase thumbor
+    - pip install pyvows tornado_pyvows happybase thumbor coverage
 
 test:
   override:
