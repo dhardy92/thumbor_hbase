@@ -24,9 +24,16 @@ family = 'images:'
 class HbaseDBContext(Vows.Context):
 
     def setup(self):
-        self.connection = happybase.connection()
-        self.connection.delete_table(table, disable=True)
-        self.connection.create_table(table, { family: {'max_versions': 1} })
+
+        self.pool = happybase.ConnectionPool(size=10)
+        with self.pool.connection() as connection:
+            try:
+                connection.delete_table(table, disable=True)
+            except happybase.hbase.ttypes.IOError:
+                None
+
+            connection.create_table(table, { family: {'max_versions': 1} })
+
 
 @Vows.batch
 class HbaseLoaderVows(HbaseDBContext):
