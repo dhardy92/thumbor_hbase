@@ -12,8 +12,8 @@ dependencies:
     - if [ ! -e ~/docker/hbase.tar ]; then docker build -t "dhardy92/hbase" . && docker save "dhardy92/hbase" > ~/docker/hbase.tar; else docker load -i ~/docker/hbase.tar; fi
     - pip install pyvows tornado_pyvows happybase thumbor coverage
     - gem install fpm
-    - fpm -s python -t deb --iteration 1 thrift
-    - fpm -s python -t deb --iteration 1 happybase
+    - fpm -s python -t deb --iteration 2 --python-install-lib /usr/lib/python2.7/dist-packages -x "*.pyc" thrift
+    - fpm -s python -t deb --iteration 2 --python-install-lib /usr/lib/python2.7/dist-packages -x "*.pyc" happybase
 
 test:
   override:
