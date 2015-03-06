@@ -9,7 +9,9 @@
 # Copyright (c) 2013 Damien Hardy dhardy@viadeoteam.com
 
 from distutils.core import setup
-from thumbor_hbase import __version__
+
+__version__ = None
+execfile('thumbor_hbase/_version.py')
 
 setup(
     name = "thumbor_hbase",
