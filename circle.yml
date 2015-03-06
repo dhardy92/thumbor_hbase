@@ -11,5 +11,5 @@ dependencies:
 
 test:
   override:
-    - docker run -d -p :9090  dajobe/hbase; sleep 10
+    - docker run -d -p 9090:9090  dajobe/hbase; sleep 10
     - pyvows -c -l thumbor_hbase
