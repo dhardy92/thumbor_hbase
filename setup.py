@@ -34,8 +34,6 @@ setup(
     ],
     package_dir = {"thumbor_hbase": "thumbor_hbase"},
     install_requires=["thumbor>=3.3.0","happybase>=0.9"],
-    tests_requires=["pyvows","happybase>=0.9","thumbor>=3.3.0"],
-    test_loader=["pyvows.cli.main"],
     long_description = """\
 Thumbor is a smart imaging service. It enables on-demand crop, resizing and flipping of images.
 This module provide support for hbase as large auto replicant key/value backend storage for images.
