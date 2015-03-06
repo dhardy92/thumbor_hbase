@@ -5,11 +5,14 @@ machine:
     version: 2.7
 
 dependencies:
-  pre:
-    - docker pull dajobe/hbase
+  cache_directories:
+    - "~/docker"
+  override:
+    - mkdir -p ~/docker
+    - if [ ! -e ~/docker/hbase.tar ]; then docker pull "dajobe/hbase" && docker save "dajobe/hbase" > ~/docker/hbase.tar; else docker load -i ~/docker/hbase.tar; fi
     - pip install pyvows tornado_pyvows happybase thumbor coverage
 
 test:
   override:
-    - docker run -d -p 9090:9090  dajobe/hbase; sleep 10
+    - docker run -d -p 9090:9090 "dajobe/hbase"; sleep 10
     - pyvows -c -l thumbor_hbase
