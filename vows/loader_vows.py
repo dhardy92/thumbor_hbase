@@ -8,11 +8,7 @@
 # http://www.opensource.org/licenses/mit-license
 # Copyright (c) 2011 globo.com timehome@corp.globo.com
 
-from thrift.transport.TSocket import TSocket
-from thrift.transport.TTransport import TBufferedTransport
-from thrift.protocol import TBinaryProtocol
-from hbase import Hbase, ttypes
-
+import happybase
 
 from pyvows import Vows, expect
 from thumbor_hbase.storage import Storage
@@ -21,44 +17,40 @@ from thumbor.context import Context
 from thumbor.config import Config
 from fixtures.storage_fixture import IMAGE_URL, IMAGE_BYTES, get_server
 
-class HbaseDBContext(Vows.Context):
-    def setup(self):
-        transport = TBufferedTransport(TSocket(host='localhost', port=9090))
-        transport.open()
-        protocol = TBinaryProtocol.TBinaryProtocol(transport)
-        self.connection = Hbase.Client(protocol)
-        self.table='thumbor-test'
-        self.family='images:'
+table = 'thumbor-test'
+family = 'images:'
 
-        columns = []
-        col = ttypes.ColumnDescriptor()
-        col.name = self.family
-        col.maxVersions = 1
-        columns.append(col)
-        try:
-            self.connection.disableTable(self.table)
-            self.connection.deleteTable(self.table)
-        except ttypes.IOError:
-            pass
-        self.connection.createTable(self.table, columns)
+
+class HbaseDBContext(Vows.Context):
+
+    def setup(self):
+
+        self.pool = happybase.ConnectionPool(size=10)
+        with self.pool.connection() as connection:
+            try:
+                connection.delete_table(table, disable=True)
+            except happybase.hbase.ttypes.IOError:
+                None
+
+            connection.create_table(table, { family: {'max_versions': 1} })
 
 
 @Vows.batch
 class HbaseLoaderVows(HbaseDBContext):
     class CanLoadImage(Vows.Context):
         @Vows.async_topic
-        def topic(self,callback ):
-            config = Config(HBASE_STORAGE_TABLE=self.parent.table,HBASE_STORAGE_SERVER_PORT=9090)
+        def topic(self, callback):
+            config = Config(HBASE_STORAGE_TABLE=table,HBASE_STORAGE_SERVER_PORT=9090)
             context = Context(config=config, server=get_server('ACME-SEC'))
             storage = Storage(context)
 
             storage.put(IMAGE_URL % '1', IMAGE_BYTES)
-            return loader.load(context, IMAGE_URL % '1', callback)
+            loader.load(context, IMAGE_URL % '1', callback)
 
         def should_not_be_null(self, topic):
-            expect(topic).not_to_be_null()
-            expect(topic).not_to_be_an_error()
+            expect(topic.args[0]).not_to_be_null()
+            expect(topic.args[0]).not_to_be_an_error()
 
         def should_have_proper_bytes(self, topic):
-            expect(topic[0]).to_equal(IMAGE_BYTES)
+            expect(topic.args[0]).to_equal(IMAGE_BYTES)
 

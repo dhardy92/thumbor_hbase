@@ -2,7 +2,7 @@ Source: python-thumbor-hbase
 Section: python
 Priority: extra
 Maintainer: Damien Hardy <dhardy@viadeoteam.com>
-Build-Depends: debhelper (>= 8.0.0), python (>=2.6.6-3~), python-setuptools, python-hbase-thrift
+Build-Depends: debhelper (>= 8.0.0), python (>=2.6.6-3~), python-setuptools
 X-Python-Version: current
 Standards-Version: 3.9.3
 Homepage: https://github.com/dhardy92/thumbor_hbase
@@ -10,7 +10,7 @@ Vcs-Git: git://github.com/dhardy92/thumbor_hbase.git
 
 Package: python-thumbor-hbase
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}, python (>= 2.7), python (<< 2.8), thumbor, python-happybase, python-thrift
 Provides: ${python:Provides}
 Description: Provide support for Hadoop HBase as storage for images in Thumbor.
  This Python module provide support for Hadoop HBase as a large 

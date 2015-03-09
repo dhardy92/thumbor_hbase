@@ -8,8 +8,10 @@
 # http://www.opensource.org/licenses/mit-license
 # Copyright (c) 2013 Damien Hardy dhardy@viadeoteam.com
 
-from distutils.core import setup
-from thumbor_hbase import __version__
+from setuptools import setup
+
+__version__ = None
+execfile('thumbor_hbase/_version.py')
 
 setup(
     name = "thumbor_hbase",
@@ -31,7 +33,7 @@ setup(
                    'Topic :: Multimedia :: Graphics :: Presentation'
     ],
     package_dir = {"thumbor_hbase": "thumbor_hbase"},
-    install_requires=["thumbor>=3.3.0","hbase_thrift"],
+    install_requires=["thumbor>=3.3.0","happybase>=0.9"],
     long_description = """\
 Thumbor is a smart imaging service. It enables on-demand crop, resizing and flipping of images.
 This module provide support for hbase as large auto replicant key/value backend storage for images.
