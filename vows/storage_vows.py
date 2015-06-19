@@ -200,6 +200,7 @@ class HbaseStorageVows(HbaseDBContext):
 
     class CryptoVows(Vows.Context):
         class RaisesIfInvalidConfig(Vows.Context):
+            @Vows.capture_error
             def topic(self):
                 config = Config(HBASE_STORAGE_TABLE=self.parent.parent.table,HBASE_STORAGE_SERVER_PORT=9090, SECURITY_KEY='', STORES_CRYPTO_KEY_FOR_EACH_IMAGE=True)
                 storage = Storage(Context(config=config, server=get_server('')))
@@ -217,7 +218,7 @@ class HbaseStorageVows(HbaseDBContext):
                 return storage.get_crypto(IMAGE_URL % '9999')
 
             def should_be_null(self, topic):
-                expect(topic).to_be_null()
+                expect(topic.result()).to_be_null()
 
         class DoesNotStoreIfConfigSaysNotTo(Vows.Context):
             def topic(self):
