@@ -80,11 +80,10 @@ class HbaseStorageVows(HbaseDBContext):
             return (storage.put(IMAGE_URL % '1', IMAGE_BYTES) , self.parent.connection.get(self.parent.table,IMAGE_URL % 1,self.parent.family) )
 
         def should_be_in_catalog(self, topic):
-            expect(topic[1]).to_be_instance_of(tornado.concurrent.Future)
             expect(topic[0]).to_equal(IMAGE_URL % '1')
-            expect(topic[1].result()).not_to_be_null()
-            expect(topic[1].result()).not_to_be_an_error()
-            expect(topic[1].result()).to_equal(IMAGE_BYTES + '_1')
+            expect(topic[1]).not_to_be_null()
+            expect(topic[1]).not_to_be_an_error()
+            expect(topic[1]).to_equal(IMAGE_BYTES + '_1')
 
     class CanStoreUnicodeImage2(Vows.Context):
         def topic(self):
@@ -229,7 +228,7 @@ class HbaseStorageVows(HbaseDBContext):
                 return storage.get_crypto(IMAGE_URL % '5')
 
             def should_be_null(self, topic):
-                expect(topic).to_be_null()
+                expect(topic.result()).to_be_null()
 
         class CanStoreCrypto(Vows.Context):
             def topic(self):
@@ -258,11 +257,11 @@ class HbaseStorageVows(HbaseDBContext):
                 return storage.get_detector_data(IMAGE_URL % '7')
 
             def should_not_be_null(self, topic):
-                expect(topic).not_to_be_null()
-                expect(topic).not_to_be_an_error()
+                expect(topic.result()).not_to_be_null()
+                expect(topic.exception()).not_to_be_an_error()
 
             def should_equal_some_data(self, topic):
-                expect(topic).to_equal('some-data')
+                expect(topic.result()).to_equal('some-data')
 
         class ReturnsNoneIfNoDetectorData(Vows.Context):
             def topic(self):
@@ -271,7 +270,7 @@ class HbaseStorageVows(HbaseDBContext):
                 return storage.get_detector_data(IMAGE_URL % '10000')
 
             def should_not_be_null(self, topic):
-                expect(topic).to_be_null()
+                expect(topic.result()).to_be_null()
 
 ######################################################################
 # TODO : correct this test (Async operation timed out after 5 seconds)
