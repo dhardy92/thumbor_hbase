@@ -56,9 +56,9 @@ class HbaseLoaderVows(HbaseDBContext):
             return loader.load(context, IMAGE_URL % '1', callback)
 
         def should_not_be_null(self, topic):
-            expect(topic).not_to_be_null()
-            expect(topic).not_to_be_an_error()
+            expect(topic.args[0].result()).not_to_be_null()
+            expect(topic.args[0].exception()).not_to_be_an_error()
 
         def should_have_proper_bytes(self, topic):
-            expect(topic[0]).to_equal(IMAGE_BYTES)
+            expect(topic.args[0].result()).to_equal(IMAGE_BYTES)
 

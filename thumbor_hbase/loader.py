@@ -16,4 +16,4 @@ import pprint
 
 def load(context, path, callback):
     storage = Storage(context)
-    storage.get(path)
+    callback(storage.get(path))
