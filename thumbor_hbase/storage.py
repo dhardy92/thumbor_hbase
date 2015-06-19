@@ -58,7 +58,7 @@ class Storage(BaseStorage):
 
     # get signature key
     @return_future
-    def get_crypto(self, pathi, callback):
+    def get_crypto(self, path, callback):
         if not self.context.config.STORES_CRYPTO_KEY_FOR_EACH_IMAGE:
             callback(None)
 
