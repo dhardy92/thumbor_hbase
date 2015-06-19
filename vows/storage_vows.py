@@ -24,6 +24,7 @@ from thumbor.context import Context, ServerParameters
 from thumbor.config import Config
 from fixtures.storage_fixture import IMAGE_URL, IMAGE_BYTES, get_server
 import time
+import tornado.concurrent
 
 def get_app(table):
         cfg = Config(HBASE_STORAGE_TABLE=table,
@@ -79,9 +80,11 @@ class HbaseStorageVows(HbaseDBContext):
             return (storage.put(IMAGE_URL % '1', IMAGE_BYTES) , self.parent.connection.get(self.parent.table,IMAGE_URL % 1,self.parent.family) )
 
         def should_be_in_catalog(self, topic):
+            expect(topic[1]).to_be_instance_of(tornado.concurrent.Future)
             expect(topic[0]).to_equal(IMAGE_URL % '1')
-            expect(topic[1]).not_to_be_null()
-            expect(topic[1]).not_to_be_an_error()
+            expect(topic[1].result()).not_to_be_null()
+            expect(topic[1].result()).not_to_be_an_error()
+            expect(topic[1].result()).to_equal(IMAGE_BYTES + '_1')
 
     class CanStoreUnicodeImage2(Vows.Context):
         def topic(self):
@@ -125,11 +128,12 @@ class HbaseStorageVows(HbaseDBContext):
             return storage.get(IMAGE_URL % '2')
 
         def should_not_be_null(self, topic):
-            expect(topic).not_to_be_null()
-            expect(topic).not_to_be_an_error()
+            expect(topic).to_be_instance_of(tornado.concurrent.Future)
+            expect(topic.exception()).not_to_be_an_error()
+            expect(topic.result()).not_to_be_null()
 
         def should_have_proper_bytes(self, topic):
-            expect(topic).to_equal(IMAGE_BYTES)
+            expect(topic.result()).to_equal(IMAGE_BYTES)
 
     class CanGetImageExistance(Vows.Context):
         def topic(self):
@@ -140,7 +144,9 @@ class HbaseStorageVows(HbaseDBContext):
             return storage.exists(IMAGE_URL % '8')
 
         def should_exists(self, topic):
-            expect(topic).to_equal(True)
+            expect(topic).to_be_instance_of(tornado.concurrent.Future)
+            expect(topic.exception()).not_to_be_an_error()
+            expect(topic.result()).to_be_true()
 
     class CanGetImageInexistance(Vows.Context):
         def topic(self):
@@ -150,7 +156,9 @@ class HbaseStorageVows(HbaseDBContext):
             return storage.exists(IMAGE_URL % '9999')
 
         def should_not_exists(self, topic):
-            expect(topic).to_equal(False)
+            expect(topic).to_be_instance_of(tornado.concurrent.Future)
+            expect(topic.exception()).not_to_be_an_error()
+            expect(topic.result()).to_be_false()
 
     class CanRemoveImage(Vows.Context):
         def topic(self):
@@ -233,11 +241,12 @@ class HbaseStorageVows(HbaseDBContext):
                 return storage.get_crypto(IMAGE_URL % '6')
 
             def should_not_be_null(self, topic):
-                expect(topic).not_to_be_null()
-                expect(topic).not_to_be_an_error()
+                expect(topic).to_be_instance_of(tornado.concurrent.Future)
+                expect(topic.exception()).not_to_be_an_error()
+                expect(topic.result()).not_to_be_null()
 
             def should_have_proper_key(self, topic):
-                expect(topic).to_equal('ACME-SEC')
+                expect(topic.result()).to_equal('ACME-SEC')
 
     class DetectorVows(Vows.Context):
         class CanStoreDetectorData(Vows.Context):
