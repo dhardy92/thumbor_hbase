@@ -61,12 +61,12 @@ class Storage(BaseStorage):
     def get_crypto(self, path, callback):
         if not self.context.config.STORES_CRYPTO_KEY_FOR_EACH_IMAGE:
             callback(None)
-
-        r = self._get(path, self.crypto_col)
-        if not r:
-            callback(None)
         else:
-            callback(r.value)
+            r = self._get(path, self.crypto_col)
+            if not r:
+                callback(None)
+            else:
+                callback(r.value)
 
     # get detector Json
     @return_future
