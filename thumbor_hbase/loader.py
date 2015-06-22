@@ -12,6 +12,8 @@ from thumbor_hbase.storage import Storage
 from thumbor.context import Context
 from thumbor.config import Config
 
+import pprint
+
 def load(context, path, callback):
     storage = Storage(context)
     callback(storage.get(path))
