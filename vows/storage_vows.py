@@ -16,6 +16,7 @@ from hbase import Hbase, ttypes
 from tornado_pyvows.context import TornadoHTTPContext as TornadoHTTPContext
 
 from pyvows import Vows, expect
+from hashlib import md5
 
 from thumbor.app import ThumborServiceApp
 from thumbor_hbase.storage import Storage
@@ -37,6 +38,14 @@ def get_app(table):
         application = ThumborServiceApp(ctx)
 
         return application
+
+def hbasekey(key):
+    try:
+        key = md5(key).hexdigest() + '-' + key
+    except UnicodeEncodeError:
+        key = md5(key.encode('utf-8')).hexdigest() + '-' + key.encode('utf-8')
+    return key
+
 
 class HbaseDBContext(Vows.Context):
     connection = None
@@ -77,7 +86,7 @@ class HbaseStorageVows(HbaseDBContext):
         def topic(self):
             config = Config(HBASE_STORAGE_TABLE=self.parent.table, HBASE_STORAGE_SERVER_PORT=9090, SECURITY_KEY='ACME-SEC')
             storage = Storage(Context(config=config, server=get_server('ACME-SEC')))
-            return (storage.put(IMAGE_URL % '1', IMAGE_BYTES) , self.parent.connection.get(self.parent.table, IMAGE_URL % 1, self.parent.family+'raw') )
+            return (storage.put(IMAGE_URL % '1', IMAGE_BYTES) , self.parent.connection.get(self.parent.table, hbasekey(IMAGE_URL % 1), self.parent.family+'raw')[0].value )
 
         def should_be_in_catalog(self, topic):
             expect(topic[0]).to_equal(IMAGE_URL % '1')
@@ -89,7 +98,7 @@ class HbaseStorageVows(HbaseDBContext):
         def topic(self):
             config = Config(HBASE_STORAGE_TABLE=self.parent.table,HBASE_STORAGE_SERVER_PORT=9090,SECURITY_KEY='ACME-SEC')
             storage = Storage(Context(config=config, server=get_server('ACME-SEC')))
-            return (storage.put(IMAGE_URL % 'àé', IMAGE_BYTES) , self.parent.connection.get(self.parent.table, IMAGE_URL % 'àé', self.parent.family+'raw') )
+            return (storage.put(IMAGE_URL % 'àé', IMAGE_BYTES) , self.parent.connection.get(self.parent.table, hbasekey(IMAGE_URL % 'àé'), self.parent.family+'raw')[0].value )
 
         def should_be_in_catalog(self, topic):
             expect(topic[0]).to_equal(IMAGE_URL % u'àé'.encode('utf-8'))
@@ -101,7 +110,7 @@ class HbaseStorageVows(HbaseDBContext):
         def topic(self):
             config = Config(HBASE_STORAGE_TABLE=self.parent.table,HBASE_STORAGE_SERVER_PORT=9090,SECURITY_KEY='ACME-SEC')
             storage = Storage(Context(config=config, server=get_server('ACME-SEC')))
-            return (storage.put(IMAGE_URL % u'àé'.encode('utf-8'), IMAGE_BYTES) , self.parent.connection.get(self.parent.table, IMAGE_URL % u'àé'.encode('utf-8'), self.parent.family+'raw') )
+            return (storage.put(IMAGE_URL % u'àé'.encode('utf-8'), IMAGE_BYTES) , self.parent.connection.get(self.parent.table, hbasekey(IMAGE_URL % u'àé'.encode('utf-8')), self.parent.family+'raw')[0].value )
 
         def should_be_in_catalog(self, topic):
             expect(topic[0]).to_equal(IMAGE_URL % u'àé'.encode('utf-8'))
@@ -113,7 +122,7 @@ class HbaseStorageVows(HbaseDBContext):
         def topic(self):
             config = Config(HBASE_STORAGE_TABLE=self.parent.table,HBASE_STORAGE_SERVER_PORT=9090,SECURITY_KEY='ACME-SEC')
             storage = Storage(Context(config=config, server=get_server('ACME-SEC')))
-            return (storage.put(IMAGE_URL % '%C3%A0%C3%A9', IMAGE_BYTES) , self.parent.connection.get(self.parent.table, IMAGE_URL % '%C3%A0%C3%A9', self.parent.family+'raw') )
+            return (storage.put(IMAGE_URL % '%C3%A0%C3%A9', IMAGE_BYTES) , self.parent.connection.get(self.parent.table, hbasekey(IMAGE_URL % '%C3%A0%C3%A9'), self.parent.family+'raw')[0].value )
 
         def should_be_in_catalog(self, topic):
             expect(topic[0]).to_equal(IMAGE_URL % '%C3%A0%C3%A9'.encode('utf-8'))
