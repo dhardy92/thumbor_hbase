@@ -77,46 +77,49 @@ class HbaseStorageVows(HbaseDBContext):
         def topic(self):
             config = Config(HBASE_STORAGE_TABLE=self.parent.table, HBASE_STORAGE_SERVER_PORT=9090, SECURITY_KEY='ACME-SEC')
             storage = Storage(Context(config=config, server=get_server('ACME-SEC')))
-            return (storage.put(IMAGE_URL % '1', IMAGE_BYTES + '_1') , self.parent.connection.get(self.parent.table,IMAGE_URL % 1,self.parent.family) )
+            return (storage.put(IMAGE_URL % '1', IMAGE_BYTES) , self.parent.connection.get(self.parent.table,IMAGE_URL % 1, self.parent.family).value )
 
         def should_be_in_catalog(self, topic):
             expect(topic[0]).to_equal(IMAGE_URL % '1')
             expect(topic[1]).not_to_be_null()
             expect(topic[1]).not_to_be_an_error()
-            expect(topic[1]).to_equal(IMAGE_BYTES + '_1')
+            expect(topic[1]).to_equal(IMAGE_BYTES)
 
     class CanStoreUnicodeImage2(Vows.Context):
         def topic(self):
             config = Config(HBASE_STORAGE_TABLE=self.parent.table,HBASE_STORAGE_SERVER_PORT=9090,SECURITY_KEY='ACME-SEC')
             storage = Storage(Context(config=config, server=get_server('ACME-SEC')))
-            return (storage.put(IMAGE_URL % 'àé', IMAGE_BYTES) , self.parent.connection.get(self.parent.table,IMAGE_URL % 'àé', self.parent.family) )
+            return (storage.put(IMAGE_URL % 'àé', IMAGE_BYTES) , self.parent.connection.get(self.parent.table,IMAGE_URL % 'àé', self.parent.family).vakue )
 
         def should_be_in_catalog(self, topic):
             expect(topic[0]).to_equal(IMAGE_URL % u'àé'.encode('utf-8'))
             expect(topic[1]).not_to_be_null()
             expect(topic[1]).not_to_be_an_error()
+            expect(topic[1]).to_equal(IMAGE_BYTES)
 
     class CanStoreUnicodeImage(Vows.Context):
         def topic(self):
             config = Config(HBASE_STORAGE_TABLE=self.parent.table,HBASE_STORAGE_SERVER_PORT=9090,SECURITY_KEY='ACME-SEC')
             storage = Storage(Context(config=config, server=get_server('ACME-SEC')))
-            return (storage.put(IMAGE_URL % u'àé'.encode('utf-8'), IMAGE_BYTES) , self.parent.connection.get(self.parent.table,IMAGE_URL % u'àé'.encode('utf-8'), self.parent.family) )
+            return (storage.put(IMAGE_URL % u'àé'.encode('utf-8'), IMAGE_BYTES) , self.parent.connection.get(self.parent.table,IMAGE_URL % u'àé'.encode('utf-8'), self.parent.family).value )
 
         def should_be_in_catalog(self, topic):
             expect(topic[0]).to_equal(IMAGE_URL % u'àé'.encode('utf-8'))
             expect(topic[1]).not_to_be_null()
             expect(topic[1]).not_to_be_an_error()
+            expect(topic[1]).to_equal(IMAGE_BYTES)
 
     class CanStoreAndGetUnicodeURLencodedImage(Vows.Context):
         def topic(self):
             config = Config(HBASE_STORAGE_TABLE=self.parent.table,HBASE_STORAGE_SERVER_PORT=9090,SECURITY_KEY='ACME-SEC')
             storage = Storage(Context(config=config, server=get_server('ACME-SEC')))
-            return (storage.put(IMAGE_URL % '%C3%A0%C3%A9', IMAGE_BYTES) , self.parent.connection.get(self.parent.table,IMAGE_URL % '%C3%A0%C3%A9', self.parent.family) )
+            return (storage.put(IMAGE_URL % '%C3%A0%C3%A9', IMAGE_BYTES) , self.parent.connection.get(self.parent.table,IMAGE_URL % '%C3%A0%C3%A9', self.parent.family).value )
 
         def should_be_in_catalog(self, topic):
             expect(topic[0]).to_equal(IMAGE_URL % '%C3%A0%C3%A9'.encode('utf-8'))
             expect(topic[1]).not_to_be_null()
             expect(topic[1]).not_to_be_an_error()
+            expect(topic[1]).to_equal(IMAGE_BYTES)
 
     class CanGetImage(Vows.Context):
         def topic(self):
