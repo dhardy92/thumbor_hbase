@@ -1,3 +1,15 @@
+python-thumbor-hbase (0.19-2) unstable; urgency=low
+
+  * make thumbor-hbase compatible with Thumbor 5.0 (asynchronous storage)
+
+ -- Damien Hardy <dhardy@viadeoteam.com>  Fri, 19 Jun 2015 18:16:05 +0200
+
+python-thumbor-hbase (0.18-1) unstable; urgency=low
+
+  * use happybase and connection pool instead of hbase-thrift module
+
+ -- Damien Hardy <dhardy@viadeoteam.com>  Thu, 05 Mar 2015 18:12:04 +0100
+
 python-thumbor-hbase (0.17-1) unstable; urgency=low
 
   * fix delete then put

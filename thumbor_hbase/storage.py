@@ -19,6 +19,7 @@ from hbase import Hbase
 from hbase.ttypes import Mutation
 
 from thumbor.storages import BaseStorage
+from tornado.concurrent import return_future
 
 class Storage(BaseStorage):
     crypto_col = 'crypto'
@@ -56,41 +57,46 @@ class Storage(BaseStorage):
         self._put(path, self.detector_col, dumps(data))
 
     # get signature key
-    def get_crypto(self, path):
+    @return_future
+    def get_crypto(self, path, callback):
         if not self.context.config.STORES_CRYPTO_KEY_FOR_EACH_IMAGE:
-            return None
-
-        r = self._get(path, self.crypto_col)
-
-        if not r:
-            return None
-        return r.value
+            callback(None)
+        else:
+            r = self._get(path, self.crypto_col)
+            if not r:
+                callback(None)
+            else:
+                callback(r.value)
 
     # get detector Json
-    def get_detector_data(self, path):
+    @return_future
+    def get_detector_data(self, path, callback):
         r = self._get(path, self.detector_col)
 
-        if r != None:
-            return loads(r.value)
+        if r is not None:
+            callback(loads(r.value))
         else:
-            return None
+            callback(None)
 
     # get image content
-    def get(self, path):
+    @return_future
+    def get(self, path, callback):
         r = self._get(path, self.image_col)
 
-        if r != None:
-            return r.value
+        if r is not None:
+             callback(r.value)
         else:
-            return None
+             callback(None)
 
     # test image exists
-    def exists(self, path):
+    @return_future
+    def exists(self, path, callback):
         r = self._get(path, self.image_col)
-        if r != None:
-            return len(r.value) != 0
+
+        if r is not None:
+            callback(len(r.value) != 0)
         else:
-            return False
+            callback(False)
 
     # remove image entries
     def remove(self,key):

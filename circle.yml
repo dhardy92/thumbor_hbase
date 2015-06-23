@@ -1,0 +1,25 @@
+machine:
+  services:
+    - docker
+  python:
+    version: 2.7
+
+dependencies:
+  cache_directories:
+    - "~/docker"
+  override:
+    - gem install fpm
+    - fpm -s python -t deb --iteration 2 --python-install-lib /usr/lib/python2.7/dist-packages -x "*.pyc" thrift
+    - fpm -s python -t deb --iteration 2 --python-install-lib /usr/lib/python2.7/dist-packages -x "*.pyc" hbase-thrift
+    - sudo dpkg -i ./python-thrift*.deb ./python-hbase-thrift*.deb
+    - mkdir -p ~/docker
+    - if [ ! -e ~/docker/hbase.tar ]; then docker build -t "dhardy92/hbase" . && docker save "dhardy92/hbase" > ~/docker/hbase.tar; else docker load -i ~/docker/hbase.tar; fi
+    - pip install pyvows tornado_pyvows thumbor coverage hbase-thrift
+
+test:
+  override:
+    - docker run -d -p 9090:9090 "dhardy92/hbase"; sleep 15
+    - pyvows -c -l thumbor_hbase
+    - debuild -i -us -uc -b && dpkg -c ../python-thumbor-hbase_*_*.deb
+  post:
+    - mv python-thrift*.deb ../python-thumbor-hbase_*.deb python-hbase-thrift*.deb $CIRCLE_ARTIFACTS

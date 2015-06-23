@@ -16,6 +16,7 @@ from hbase import Hbase, ttypes
 from tornado_pyvows.context import TornadoHTTPContext as TornadoHTTPContext
 
 from pyvows import Vows, expect
+from hashlib import md5
 
 from thumbor.app import ThumborServiceApp
 from thumbor_hbase.storage import Storage
@@ -24,6 +25,7 @@ from thumbor.context import Context, ServerParameters
 from thumbor.config import Config
 from fixtures.storage_fixture import IMAGE_URL, IMAGE_BYTES, get_server
 import time
+import tornado.concurrent
 
 def get_app(table):
         cfg = Config(HBASE_STORAGE_TABLE=table,
@@ -36,6 +38,14 @@ def get_app(table):
         application = ThumborServiceApp(ctx)
 
         return application
+
+def hbasekey(key):
+    try:
+        key = md5(key).hexdigest() + '-' + key
+    except UnicodeEncodeError:
+        key = md5(key.encode('utf-8')).hexdigest() + '-' + key.encode('utf-8')
+    return key
+
 
 class HbaseDBContext(Vows.Context):
     connection = None
@@ -76,45 +86,49 @@ class HbaseStorageVows(HbaseDBContext):
         def topic(self):
             config = Config(HBASE_STORAGE_TABLE=self.parent.table, HBASE_STORAGE_SERVER_PORT=9090, SECURITY_KEY='ACME-SEC')
             storage = Storage(Context(config=config, server=get_server('ACME-SEC')))
-            return (storage.put(IMAGE_URL % '1', IMAGE_BYTES) , self.parent.connection.get(self.parent.table,IMAGE_URL % 1,self.parent.family) )
+            return (storage.put(IMAGE_URL % '1', IMAGE_BYTES) , self.parent.connection.get(self.parent.table, hbasekey(IMAGE_URL % 1), self.parent.family+'raw')[0].value )
 
         def should_be_in_catalog(self, topic):
             expect(topic[0]).to_equal(IMAGE_URL % '1')
             expect(topic[1]).not_to_be_null()
             expect(topic[1]).not_to_be_an_error()
+            expect(topic[1]).to_equal(IMAGE_BYTES)
 
     class CanStoreUnicodeImage2(Vows.Context):
         def topic(self):
             config = Config(HBASE_STORAGE_TABLE=self.parent.table,HBASE_STORAGE_SERVER_PORT=9090,SECURITY_KEY='ACME-SEC')
             storage = Storage(Context(config=config, server=get_server('ACME-SEC')))
-            return (storage.put(IMAGE_URL % 'àé', IMAGE_BYTES) , self.parent.connection.get(self.parent.table,IMAGE_URL % 'àé', self.parent.family) )
+            return (storage.put(IMAGE_URL % 'àé', IMAGE_BYTES) , self.parent.connection.get(self.parent.table, hbasekey(IMAGE_URL % 'àé'), self.parent.family+'raw')[0].value )
 
         def should_be_in_catalog(self, topic):
             expect(topic[0]).to_equal(IMAGE_URL % u'àé'.encode('utf-8'))
             expect(topic[1]).not_to_be_null()
             expect(topic[1]).not_to_be_an_error()
+            expect(topic[1]).to_equal(IMAGE_BYTES)
 
     class CanStoreUnicodeImage(Vows.Context):
         def topic(self):
             config = Config(HBASE_STORAGE_TABLE=self.parent.table,HBASE_STORAGE_SERVER_PORT=9090,SECURITY_KEY='ACME-SEC')
             storage = Storage(Context(config=config, server=get_server('ACME-SEC')))
-            return (storage.put(IMAGE_URL % u'àé'.encode('utf-8'), IMAGE_BYTES) , self.parent.connection.get(self.parent.table,IMAGE_URL % u'àé'.encode('utf-8'), self.parent.family) )
+            return (storage.put(IMAGE_URL % u'àé'.encode('utf-8'), IMAGE_BYTES) , self.parent.connection.get(self.parent.table, hbasekey(IMAGE_URL % u'àé'.encode('utf-8')), self.parent.family+'raw')[0].value )
 
         def should_be_in_catalog(self, topic):
             expect(topic[0]).to_equal(IMAGE_URL % u'àé'.encode('utf-8'))
             expect(topic[1]).not_to_be_null()
             expect(topic[1]).not_to_be_an_error()
+            expect(topic[1]).to_equal(IMAGE_BYTES)
 
     class CanStoreAndGetUnicodeURLencodedImage(Vows.Context):
         def topic(self):
             config = Config(HBASE_STORAGE_TABLE=self.parent.table,HBASE_STORAGE_SERVER_PORT=9090,SECURITY_KEY='ACME-SEC')
             storage = Storage(Context(config=config, server=get_server('ACME-SEC')))
-            return (storage.put(IMAGE_URL % '%C3%A0%C3%A9', IMAGE_BYTES) , self.parent.connection.get(self.parent.table,IMAGE_URL % '%C3%A0%C3%A9', self.parent.family) )
+            return (storage.put(IMAGE_URL % '%C3%A0%C3%A9', IMAGE_BYTES) , self.parent.connection.get(self.parent.table, hbasekey(IMAGE_URL % '%C3%A0%C3%A9'), self.parent.family+'raw')[0].value )
 
         def should_be_in_catalog(self, topic):
             expect(topic[0]).to_equal(IMAGE_URL % '%C3%A0%C3%A9'.encode('utf-8'))
             expect(topic[1]).not_to_be_null()
             expect(topic[1]).not_to_be_an_error()
+            expect(topic[1]).to_equal(IMAGE_BYTES)
 
     class CanGetImage(Vows.Context):
         def topic(self):
@@ -125,11 +139,12 @@ class HbaseStorageVows(HbaseDBContext):
             return storage.get(IMAGE_URL % '2')
 
         def should_not_be_null(self, topic):
-            expect(topic).not_to_be_null()
-            expect(topic).not_to_be_an_error()
+            expect(topic).to_be_instance_of(tornado.concurrent.Future)
+            expect(topic.exception()).not_to_be_an_error()
+            expect(topic.result()).not_to_be_null()
 
         def should_have_proper_bytes(self, topic):
-            expect(topic).to_equal(IMAGE_BYTES)
+            expect(topic.result()).to_equal(IMAGE_BYTES)
 
     class CanGetImageExistance(Vows.Context):
         def topic(self):
@@ -140,7 +155,9 @@ class HbaseStorageVows(HbaseDBContext):
             return storage.exists(IMAGE_URL % '8')
 
         def should_exists(self, topic):
-            expect(topic).to_equal(True)
+            expect(topic).to_be_instance_of(tornado.concurrent.Future)
+            expect(topic.exception()).not_to_be_an_error()
+            expect(topic.result()).to_be_true()
 
     class CanGetImageInexistance(Vows.Context):
         def topic(self):
@@ -150,7 +167,9 @@ class HbaseStorageVows(HbaseDBContext):
             return storage.exists(IMAGE_URL % '9999')
 
         def should_not_exists(self, topic):
-            expect(topic).to_equal(False)
+            expect(topic).to_be_instance_of(tornado.concurrent.Future)
+            expect(topic.exception()).not_to_be_an_error()
+            expect(topic.result()).to_be_false()
 
     class CanRemoveImage(Vows.Context):
         def topic(self):
@@ -193,6 +212,7 @@ class HbaseStorageVows(HbaseDBContext):
 
     class CryptoVows(Vows.Context):
         class RaisesIfInvalidConfig(Vows.Context):
+            @Vows.capture_error
             def topic(self):
                 config = Config(HBASE_STORAGE_TABLE=self.parent.parent.table,HBASE_STORAGE_SERVER_PORT=9090, SECURITY_KEY='', STORES_CRYPTO_KEY_FOR_EACH_IMAGE=True)
                 storage = Storage(Context(config=config, server=get_server('')))
@@ -210,7 +230,7 @@ class HbaseStorageVows(HbaseDBContext):
                 return storage.get_crypto(IMAGE_URL % '9999')
 
             def should_be_null(self, topic):
-                expect(topic).to_be_null()
+                expect(topic.result()).to_be_null()
 
         class DoesNotStoreIfConfigSaysNotTo(Vows.Context):
             def topic(self):
@@ -221,7 +241,7 @@ class HbaseStorageVows(HbaseDBContext):
                 return storage.get_crypto(IMAGE_URL % '5')
 
             def should_be_null(self, topic):
-                expect(topic).to_be_null()
+                expect(topic.result()).to_be_null()
 
         class CanStoreCrypto(Vows.Context):
             def topic(self):
@@ -233,11 +253,12 @@ class HbaseStorageVows(HbaseDBContext):
                 return storage.get_crypto(IMAGE_URL % '6')
 
             def should_not_be_null(self, topic):
-                expect(topic).not_to_be_null()
-                expect(topic).not_to_be_an_error()
+                expect(topic).to_be_instance_of(tornado.concurrent.Future)
+                expect(topic.exception()).not_to_be_an_error()
+                expect(topic.result()).not_to_be_null()
 
             def should_have_proper_key(self, topic):
-                expect(topic).to_equal('ACME-SEC')
+                expect(topic.result()).to_equal('ACME-SEC')
 
     class DetectorVows(Vows.Context):
         class CanStoreDetectorData(Vows.Context):
@@ -249,11 +270,11 @@ class HbaseStorageVows(HbaseDBContext):
                 return storage.get_detector_data(IMAGE_URL % '7')
 
             def should_not_be_null(self, topic):
-                expect(topic).not_to_be_null()
-                expect(topic).not_to_be_an_error()
+                expect(topic.result()).not_to_be_null()
+                expect(topic.exception()).not_to_be_an_error()
 
             def should_equal_some_data(self, topic):
-                expect(topic).to_equal('some-data')
+                expect(topic.result()).to_equal('some-data')
 
         class ReturnsNoneIfNoDetectorData(Vows.Context):
             def topic(self):
@@ -262,7 +283,7 @@ class HbaseStorageVows(HbaseDBContext):
                 return storage.get_detector_data(IMAGE_URL % '10000')
 
             def should_not_be_null(self, topic):
-                expect(topic).to_be_null()
+                expect(topic.result()).to_be_null()
 
 ######################################################################
 # TODO : correct this test (Async operation timed out after 5 seconds)
