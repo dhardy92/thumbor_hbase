@@ -74,7 +74,7 @@ class Storage(BaseStorage):
         r = self._get(path, self.detector_col)
 
         if r is not None:
-            callback(loads(r))
+            callback(loads(r.value))
         else:
             callback(None)
 
@@ -94,7 +94,7 @@ class Storage(BaseStorage):
         r = self._get(path, self.image_col)
 
         if r is not None:
-            callback(len(r) != 0)
+            callback(len(r.value) != 0)
         else:
             callback(False)
 
