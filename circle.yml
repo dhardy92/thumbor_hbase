@@ -22,4 +22,4 @@ test:
     - pyvows -c -l thumbor_hbase
     - debuild -i -us -uc -b && dpkg -c ../python-thumbor-hbase_*_*.deb
   post:
-    - mv python-thrift*.deb ../python-thumbor-hbase_*.deb happybase/python-hbase-thritf*.deb $CIRCLE_ARTIFACTS
+    - mv python-thrift*.deb ../python-thumbor-hbase_*.deb python-hbase-thrift*.deb $CIRCLE_ARTIFACTS
