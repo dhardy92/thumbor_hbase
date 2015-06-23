@@ -8,8 +8,11 @@
 # http://www.opensource.org/licenses/mit-license
 # Copyright (c) 2013 Damien Hardy dhardy@viadeoteam.com
 
-from distutils.core import setup
-from thumbor_hbase import __version__
+
+from setuptools import setup
+
+__version__ = None
+execfile('thumbor_hbase/_version.py')
 
 setup(
     name = "thumbor_hbase",
